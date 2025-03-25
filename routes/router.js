@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
 			});
 			console.log(users);
 
-			res.render('index', {allUsers: users});
+			res.render('index2', {allUsers: users});
 		}
 	}
 	catch(ex) {
@@ -343,5 +343,57 @@ router.post('/addPet', async (req, res) => {
 		console.log(ex);	
 	}
 });
+
+router.post('/setUserPic', upload.single('image'), async (req, res) => {
+    try {
+        let user_id = req.body.user_id;
+        let image_uuid = uuid();
+
+        if (!req.file) {
+            return res.status(400).send("No file uploaded.");
+        }
+
+        let buf64 = req.file.buffer.toString('base64');
+
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(
+            "data:image/octet-stream;base64," + buf64,
+            { public_id: image_uuid }
+        );
+
+        if (!result || !result.secure_url) {
+            return res.status(500).send("Error uploading image to Cloudinary.");
+        }
+
+        console.log(`Uploaded image URL: ${result.secure_url}`);
+
+        // Validate user_id
+        const schema = Joi.object({
+            user_id: Joi.string().alphanum().min(24).max(24).required()
+        });
+
+        const validationResult = schema.validate({ user_id });
+        if (validationResult.error) {
+            console.log(validationResult.error);
+            return res.status(400).send("Invalid user_id");
+        }
+
+        // Update user profile picture in MongoDB
+        const success = await userCollection.updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: { profile_picture: result.secure_url } }
+        );
+
+        if (!success.modifiedCount) {
+            return res.status(500).send("Error saving profile picture in database.");
+        }
+
+        res.redirect('/'); // Redirect to homepage or profile page
+    } catch (ex) {
+        console.error("Error processing profile picture upload:", ex);
+        res.status(500).send("Internal Server Error.");
+    }
+});
+
 
 module.exports = router;
