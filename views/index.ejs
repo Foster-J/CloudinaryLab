@@ -28,6 +28,7 @@
 								<th> Email </th>
 								<th> &nbsp; </th>
 								<th> &nbsp; </th>
+								<th> &nbsp;</th>
 							</tr>
 							</thead>
 							<% let i=0; %>
@@ -44,6 +45,11 @@
 								<td><a href="/showPets?id=<%= allUsers[i].user_id %>">
 									<span class="icon is-small">
 										<i class="fas fa-paw"></i>
+									</span></a>
+								</td>
+								<td><a href="/showProfilePictures?id=<%= allUsers[i].user_id %>">
+									<span class="icon is-small">
+										<i class="fas fa-image"></i>
 									</span></a>
 								</td>
 							</tr>
